@@ -1,17 +1,17 @@
-import os
-from dotenv import load_dotenv
+# utils.py (Streamlit Cloud Optimized)
+import streamlit as st
 from google import genai
 from google.genai import types
 
-# Load environment variables
-load_dotenv()
-
-# Verify API key
-if not os.getenv("GEMINI_API_KEY"):
-    raise ValueError("Missing GEMINI_API_KEY in .env file")
-
-# Initialize GenAI client
-genai_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# Initialize GenAI client with Streamlit secrets
+try:
+    genai_client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+except KeyError:
+    st.error("❌ Missing GEMINI_API_KEY in Streamlit secrets")
+    raise ValueError("GEMINI_API_KEY not found in Streamlit secrets")
+except Exception as e:
+    st.error(f"🔧 Configuration Error: {str(e)}")
+    raise
 
 def summarize_common(
     system_prompt: str,
@@ -20,7 +20,7 @@ def summarize_common(
     model_name: str = "gemini-1.5-pro-latest"
 ) -> str:
     """
-    Unified function for content generation
+    Unified content generation function with error handling
     """
     token_config = {
         "Quick Scan": 1024,
@@ -41,4 +41,5 @@ def summarize_common(
         return response.text
     
     except Exception as e:
-        raise RuntimeError(f"API Error: {str(e)}")
+        st.error("⚠️ Failed to generate content")
+        raise RuntimeError(f"API Error: {str(e)}") from e
